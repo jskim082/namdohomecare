@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="남도홈케어">
+<title>남도홈케어 검색어</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+  :root {
+    --hood-accent:#1d4ed8; --hood-light:#dbeafe;
+    --mesh-accent:#15803d; --mesh-light:#dcfce7;
+    --gas-accent:#c2410c;  --gas-light:#ffedd5;
+    --bg:#f0f4f8; --surface:#ffffff;
+    --text:#1e293b; --text-sub:#64748b;
+    --shadow:0 4px 24px rgba(0,0,0,0.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  header{background:linear-gradient(135deg,#1e3a8a,#1d4ed8);padding:20px 24px 18px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(30,58,138,0.3)}
+  .header-icon{font-size:28px}
+  .header-text h1{font-size:20px;font-weight:900;color:#fff;letter-spacing:-0.3px}
+  .header-text p{font-size:12px;color:#93c5fd;margin-top:2px}
+  .tab-bar{display:flex;background:#1e3a8a;padding:0 16px;gap:4px}
+  .tab-btn{flex:1;padding:12px 8px;border:none;background:transparent;color:#93c5fd;font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;cursor:pointer;border-bottom:3px solid transparent;transition:all 0.2s;border-radius:8px 8px 0 0}
+  .tab-btn.active-hood{color:#fff;border-color:#60a5fa;background:rgba(96,165,250,0.15)}
+  .tab-btn.active-mesh{color:#fff;border-color:#4ade80;background:rgba(74,222,128,0.15)}
+  .tab-btn.active-gas{color:#fff;border-color:#fb923c;background:rgba(251,146,60,0.15)}
+  .panel{display:none;padding:16px}
+  .panel.active{display:block}
+  .panel-banner{border-radius:12px 12px 0 0;padding:12px 18px;font-size:13px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px}
+  .panel-banner .count-badge{margin-left:auto;background:rgba(255,255,255,0.25);padding:2px 10px;border-radius:20px;font-size:12px;font-weight:500}
+  .keyword-list{background:var(--surface);border-radius:0 0 12px 12px;box-shadow:var(--shadow);overflow:hidden;max-height:calc(100vh - 330px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .keyword-list::-webkit-scrollbar{width:4px}
+  .keyword-list::-webkit-scrollbar-track{background:#f1f5f9}
+  .keyword-list::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:2px}
+  .kw-item{padding:15px 20px;font-size:16px;font-weight:500;cursor:pointer;border-bottom:1px solid #f1f5f9;transition:background 0.15s;user-select:none;display:flex;align-items:center;gap:10px}
+  .kw-item:last-child{border-bottom:none}
+  .kw-item:active{opacity:0.7}
+  .kw-item.selected-hood{background:var(--hood-light);color:var(--hood-accent);font-weight:700}
+  .kw-item.selected-mesh{background:var(--mesh-light);color:var(--mesh-accent);font-weight:700}
+  .kw-item.selected-gas{background:var(--gas-light);color:var(--gas-accent);font-weight:700}
+  .kw-item .check{width:22px;height:22px;border-radius:50%;border:2px solid #cbd5e1;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all 0.15s}
+  .kw-item.selected-hood .check{background:var(--hood-accent);border-color:var(--hood-accent);color:#fff}
+  .kw-item.selected-mesh .check{background:var(--mesh-accent);border-color:var(--mesh-accent);color:#fff}
+  .kw-item.selected-gas .check{background:var(--gas-accent);border-color:var(--gas-accent);color:#fff}
+  .kw-sep{height:8px;background:#f8fafc;border-top:1px dashed #e2e8f0;border-bottom:1px dashed #e2e8f0}
+  .bottom-area{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+  .selected-display{background:var(--surface);border-radius:12px;padding:14px 18px;font-size:14px;color:var(--text-sub);box-shadow:var(--shadow);min-height:50px;display:flex;align-items:center;gap:8px}
+  .selected-display .sel-kw{font-size:16px;font-weight:700;color:var(--text)}
+  .search-btn{width:100%;padding:18px;border:none;border-radius:14px;font-family:'Noto Sans KR',sans-serif;font-size:18px;font-weight:900;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,0.2);transition:transform 0.1s;letter-spacing:-0.3px}
+  .search-btn:active{transform:scale(0.97)}
+  .search-btn:disabled{opacity:0.45}
+  .btn-hood{background:linear-gradient(135deg,#1d4ed8,#3b82f6)}
+  .btn-mesh{background:linear-gradient(135deg,#15803d,#22c55e)}
+  .btn-gas{background:linear-gradient(135deg,#c2410c,#f97316)}
+  .overlay{display:none;position:fixed;inset:0;z-index:999;background:rgba(15,23,42,0.82);backdrop-filter:blur(6px);align-items:center;justify-content:center}
+  .overlay.show{display:flex}
+  .typing-card{background:#fff;border-radius:24px;padding:36px 32px 32px;width:88%;max-width:520px;box-shadow:0 24px 64px rgba(0,0,0,0.4);display:flex;flex-direction:column;gap:20px}
+  .typing-label{font-size:13px;font-weight:700;color:#94a3b8;letter-spacing:1px;display:flex;align-items:center;gap:8px}
+  .typing-label .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:blink 1s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+  .fake-naver{border:2px solid #e2e8f0;border-radius:12px;overflow:hidden}
+  .fake-naver-bar{background:#03c75a;padding:8px 14px;display:flex;align-items:center;gap:6px}
+  .fake-naver-bar .ndot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.5)}
+  .fake-naver-logo{font-size:13px;font-weight:900;color:#fff;margin-left:4px}
+  .fake-search-wrap{background:#f8f9fa;padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e2e8f0}
+  .fake-search-icon{font-size:18px;color:#94a3b8;flex-shrink:0}
+  .fake-search-input{flex:1;font-family:'Noto Sans KR',sans-serif;font-size:18px;font-weight:500;color:#1e293b;min-height:28px;display:flex;align-items:center}
+  .cursor{display:inline-block;width:2px;height:22px;background:#1e293b;margin-left:1px;vertical-align:middle;animation:cursor-blink 0.6s steps(1) infinite}
+  @keyframes cursor-blink{0%,100%{opacity:1}50%{opacity:0}}
+  .fake-naver-body{background:#fff;padding:14px 16px;min-height:60px;display:flex;align-items:center;justify-content:center}
+  .loading-dots{display:flex;gap:6px}
+  .loading-dots span{width:8px;height:8px;border-radius:50%;background:#cbd5e1;animation:ldot 1.2s infinite}
+  .loading-dots span:nth-child(2){animation-delay:0.2s}
+  .loading-dots span:nth-child(3){animation-delay:0.4s}
+  @keyframes ldot{0%,80%,100%{transform:scale(1)}40%{transform:scale(1.5)}}
+  .redirect-msg{font-size:13px;color:var(--text-sub);text-align:center;line-height:1.6}
+  .redirect-msg strong{color:var(--text)}
+  .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);background:#1e293b;color:#fff;padding:12px 24px;border-radius:30px;font-size:14px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);z-index:9999;white-space:nowrap}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">🏠</div>
+  <div class="header-text">
+    <h1>남도홈케어 검색어</h1>
+    <p>검색어 선택 → 네이버 검색 버튼</p>
+  </div>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active-hood" onclick="switchTab('hood')">🔧 주방후드</button>
+  <button class="tab-btn"            onclick="switchTab('mesh')">🪟 방충망</button>
+  <button class="tab-btn"            onclick="switchTab('gas')">🔥 가스렌지</button>
+</div>
+
+<div class="panel active" id="panel-hood">
+  <div class="panel-banner" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);">
+    🔧 주방후드 검색어 목록 <span class="count-badge" id="cnt-hood"></span>
+  </div>
+  <div class="keyword-list" id="list-hood"></div>
+  <div class="bottom-area">
+    <div class="selected-display" id="disp-hood"><span style="font-size:18px">👆</span><span>검색어를 선택하세요</span></div>
+    <button class="search-btn btn-hood" id="btn-hood" onclick="doSearch('hood')" disabled>🔍 네이버 검색</button>
+  </div>
+</div>
+
+<div class="panel" id="panel-mesh">
+  <div class="panel-banner" style="background:linear-gradient(135deg,#15803d,#22c55e);">
+    🪟 방충망 검색어 목록 <span class="count-badge" id="cnt-mesh"></span>
+  </div>
+  <div class="keyword-list" id="list-mesh"></div>
+  <div class="bottom-area">
+    <div class="selected-display" id="disp-mesh"><span style="font-size:18px">👆</span><span>검색어를 선택하세요</span></div>
+    <button class="search-btn btn-mesh" id="btn-mesh" onclick="doSearch('mesh')" disabled>🔍 네이버 검색</button>
+  </div>
+</div>
+
+<div class="panel" id="panel-gas">
+  <div class="panel-banner" style="background:linear-gradient(135deg,#c2410c,#f97316);">
+    🔥 가스렌지 검색어 목록 <span class="count-badge" id="cnt-gas"></span>
+  </div>
+  <div class="keyword-list" id="list-gas"></div>
+  <div class="bottom-area">
+    <div class="selected-display" id="disp-gas"><span style="font-size:18px">👆</span><span>검색어를 선택하세요</span></div>
+    <button class="search-btn btn-gas" id="btn-gas" onclick="doSearch('gas')" disabled>🔍 네이버 검색</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="typing-card">
+    <div class="typing-label"><div class="dot"></div>네이버 검색 중...</div>
+    <div class="fake-naver">
+      <div class="fake-naver-bar">
+        <div class="ndot"></div><div class="ndot"></div><div class="ndot"></div>
+        <span class="fake-naver-logo">NAVER</span>
+      </div>
+      <div class="fake-search-wrap">
+        <span class="fake-search-icon">🔍</span>
+        <div class="fake-search-input"><span id="typed-text"></span><span class="cursor"></span></div>
+      </div>
+      <div class="fake-naver-body">
+        <div class="loading-dots" id="loading-dots" style="display:none"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+    <div class="redirect-msg" id="redirect-msg" style="display:none">
+      <strong>검색 완료!</strong><br>잠시 후 네이버 검색 결과로 이동합니다...
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const KEYWORDS = {
+  hood: [
+    "광주광역시주방후드교체",
+    "광주주방후드교체",
+    "전남광주주방후드교체",
+    "광주특별시주방후드교체",
+    "전남광주특별시주방후드교체",
+    "전남광주통합특별시주방후드교체",
+    "나주주방후드교체",
+    "목포주방후드교체",
+    "남악주방후드교체",
+    "무안주방후드교체",
+    "장성주방후드교체",
+    "함평주방후드교체",
+    "영광주방후드교체",
+    "담양주방후드교체",
+    "화순주방후드교체",
+    "영암주방후드교체",
+    "강진주방후드교체",
+    "장흥주방후드교체",
+    "해남주방후드교체"
+  ],
+  mesh: [
+    "광주광역시방충망교체",
+    "광주방충망교체",
+    "전남광주방충망교체",
+    "광주특별시방충망교체",
+    "전남광주특별시방충망교체",
+    "전남광주통합특별시방충망교체",
+    "나주방충망교체",
+    "목포방충망교체",
+    "남악방충망교체",
+    "무안방충망교체",
+    "장성방충망교체",
+    "함평방충망교체",
+    "영광방충망교체",
+    "담양방충망교체",
+    "화순방충망교체",
+    "영암방충망교체",
+    "강진방충망교체",
+    "장흥방충망교체",
+    "해남방충망교체"
+  ],
+  gas: [
+    "광주광역시가스렌지교체",
+    "광주가스렌지교체",
+    "전남광주가스렌지교체",
+    "광주특별시가스렌지교체",
+    "전남광주특별시가스렌지교체",
+    "전남광주통합특별시가스렌지교체",
+    "나주가스렌지교체",
+    "목포가스렌지교체",
+    "남악가스렌지교체",
+    "무안가스렌지교체",
+    "장성가스렌지교체",
+    "함평가스렌지교체",
+    "영광가스렌지교체",
+    "담양가스렌지교체",
+    "화순가스렌지교체",
+    "영암가스렌지교체",
+    "강진가스렌지교체",
+    "장흥가스렌지교체",
+    "해남가스렌지교체"
+  ]
+};
+
+const selected = {hood:null, mesh:null, gas:null};
+const tabs = ['hood','mesh','gas'];
+
+function buildList(cat) {
+  const list = document.getElementById('list-'+cat);
+  const kws  = KEYWORDS[cat];
+  document.getElementById('cnt-'+cat).textContent = kws.length+'개';
+  list.innerHTML = '';
+  kws.forEach((kw, i) => {
+    // 앞 6개(광주권) / 뒤 13개(지역) 사이 구분선
+    if (i === 6) {
+      const sep = document.createElement('div');
+      sep.className = 'kw-sep';
+      list.appendChild(sep);
+    }
+    const item = document.createElement('div');
+    item.className = 'kw-item';
+    item.innerHTML = `<div class="check"></div><span>${kw}</span>`;
+    item.addEventListener('click', () => selectKw(cat, kw, item));
+    list.appendChild(item);
+  });
+}
+
+function selectKw(cat, kw, el) {
+  document.querySelectorAll('#list-'+cat+' .kw-item').forEach(e => {
+    e.classList.remove('selected-'+cat);
+    e.querySelector('.check').textContent = '';
+  });
+  el.classList.add('selected-'+cat);
+  el.querySelector('.check').textContent = '✓';
+  selected[cat] = kw;
+  document.getElementById('disp-'+cat).innerHTML =
+    '<span style="font-size:18px">✅</span><span class="sel-kw">'+kw+'</span>';
+  document.getElementById('btn-'+cat).disabled = false;
+}
+
+function doSearch(cat) {
+  const kw = selected[cat];
+  if (!kw) return;
+  const overlay   = document.getElementById('overlay');
+  const typedEl   = document.getElementById('typed-text');
+  const loadingEl = document.getElementById('loading-dots');
+  const redirEl   = document.getElementById('redirect-msg');
+  typedEl.textContent = '';
+  loadingEl.style.display = 'none';
+  redirEl.style.display   = 'none';
+  overlay.classList.add('show');
+  let i = 0;
+  function typeNext() {
+    if (i < kw.length) {
+      typedEl.textContent += kw[i++];
+      setTimeout(typeNext, 50 + Math.random()*80);
+    } else {
+      setTimeout(() => {
+        loadingEl.style.display = 'flex';
+        setTimeout(() => {
+          redirEl.style.display = 'block';
+          setTimeout(() => {
+            overlay.classList.remove('show');
+            window.open('https://search.naver.com/search.naver?query='+encodeURIComponent(kw), '_blank');
+          }, 500);
+        }, 800);
+      }, 300);
+    }
+  }
+  setTimeout(typeNext, 200);
+}
+
+function switchTab(cat) {
+  tabs.forEach((t,i) => {
+    document.getElementById('panel-'+t).classList.remove('active');
+    document.querySelectorAll('.tab-btn')[i].className = 'tab-btn';
+  });
+  document.getElementById('panel-'+cat).classList.add('active');
+  document.querySelectorAll('.tab-btn')[tabs.indexOf(cat)].classList.add('active-'+cat);
+}
+
+tabs.forEach(buildList);
+</script>
+</body>
+</html>
